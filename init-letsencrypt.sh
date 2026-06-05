@@ -3,7 +3,7 @@ set -e
 
 DOMAIN="xelin.duckdns.org"
 EMAIL="benjamin.w.appelberg@gmail.com"
-COMPOSE="docker compose -f docker-compose.prod.yml"
+COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml"
 
 # Step 1: Create a dummy self-signed cert inside the letsencrypt Docker volume
 # so nginx can start (nginx refuses to start if the cert path doesn't exist)
