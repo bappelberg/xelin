@@ -1,0 +1,22 @@
+# Secrets - ALDRIG committa dessa
+secrets/
+
+# Local docker overrides
+docker-compose.override.yml
+
+# Local network notes
+network.txt
+
+# Go binaries
+backend/bin/
+backend/tmp/
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/coverage/
+**/.env*
+**/*.pem
+
+# macOS
+.DS_Store

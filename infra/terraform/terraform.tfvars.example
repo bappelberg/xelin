@@ -1,0 +1,15 @@
+# Kopiera denna fil till terraform.tfvars och fyll i dina värden
+# OBS: Lägg aldrig terraform.tfvars i git!
+
+tenancy_ocid        = "ocid1.tenancy.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+user_ocid           = "ocid1.user.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+fingerprint         = "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+private_key_path    = "~/.oci/oci_api_key.pem"
+region              = "eu-stockholm-1"
+compartment_ocid    = "ocid1.tenancy.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+availability_domain = "Uocm:EU-STOCKHOLM-1-AD-1"
+project_name        = "xelin"
+environment         = "prod"
+
+# Lämna tomt för auto-genererat nyckelpar, eller ange din publika SSH-nyckel:
+# ssh_public_key = "ssh-rsa AAAA..."
