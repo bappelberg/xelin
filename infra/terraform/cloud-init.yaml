@@ -8,6 +8,7 @@ packages:
   - ufw
   - docker.io
   - docker-compose-v2
+  - docker-buildx
   - certbot
   - iptables-persistent
 

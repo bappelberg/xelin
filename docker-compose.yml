@@ -7,14 +7,11 @@ services:
     build:
       context: ./backend
     environment:
-      - PORT=8080
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=xelin
       - DB_USER=xelin
-      - DB_PASSWORD_FILE=/run/secrets/db_password
-    secrets:
-      - db_password
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -24,21 +21,14 @@ services:
     environment:
       - POSTGRES_DB=xelin
       - POSTGRES_USER=xelin
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
-    secrets:
-      - db_password
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - xelin_pgdata:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U xelin -d xelin"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
 
 volumes:
   xelin_pgdata:

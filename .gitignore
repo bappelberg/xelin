@@ -1,5 +1,6 @@
 # Secrets - ALDRIG committa dessa
 secrets/
+.env
 
 # Local docker overrides
 docker-compose.override.yml

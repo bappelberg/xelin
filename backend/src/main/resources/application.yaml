@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: xelin
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xelin}
+    username: ${DB_USER:xelin}
+    password: ${DB_PASSWORD:xelin}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  # LDAP används för autentisering via Spring Security, inte som datarepository.
+  # Stänger av Spring Data LDAP-scanning så JPA-repositories inte misstas för LDAP.
+  data:
+    ldap:
+      repositories:
+        enabled: false
+
+  ldap:
+    urls: ${SPRING_LDAP_URLS:ldap://localhost:389}
+    base: ${SPRING_LDAP_BASE:dc=xelin,dc=foi,dc=se}
+    username: ${SPRING_LDAP_USERNAME:cn=admin,dc=xelin,dc=foi,dc=se}
+    password: ${SPRING_LDAP_PASSWORD:xelin}

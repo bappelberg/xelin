@@ -1,16 +1,20 @@
-FROM golang:1.26-alpine AS builder
-
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
-RUN apk update && apk add --no-cache git ca-certificates tzdata
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -trimpath -ldflags="-s -w" -o xelin ./cmd/server
 
-FROM scratch
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=builder /app/xelin /xelin
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline -q
+
+COPY src/ src/
+RUN ./mvnw package -DskipTests -q
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["/xelin"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
