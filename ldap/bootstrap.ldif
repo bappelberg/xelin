@@ -1,0 +1,27 @@
+# Organisationsenhet för användare
+dn: ou=people,dc=foi,dc=se
+objectClass: top
+objectClass: organizationalUnit
+ou: people
+
+# Användaren "ben" med BCrypt-hashat lösenord för "benspassword"
+dn: uid=ben,ou=people,dc=foi,dc=se
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Ben Alex
+sn: Alex
+uid: ben
+userPassword: $2a$10$c6bSeWPhg06xB1lvmaWNNe4NROmZiSpYhlocU/98HNr2MhIOiSt36
+
+# Användaren "bob" med BCrypt-hashat lösenord för "bobspassword"
+dn: uid=bob,ou=people,dc=foi,dc=se
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Bob Hamilton
+sn: Hamilton
+uid: bob
+userPassword: $2a$10$X/Lsg42oQwUVvusQW6Rb7uNXD3uwCQZRX7qnnEfZHCak8T82HhY8G

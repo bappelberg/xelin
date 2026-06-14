@@ -3,7 +3,7 @@ services:
     build:
       context: ./frontend
     environment:
-      - NODE_ENV=development
+      NODE_ENV: development
     ports:
       - "3000:3000"
     volumes:
@@ -16,30 +16,30 @@ services:
     build:
       context: ./backend
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=xelin
-      - DB_USER=xelin
-      - DB_PASSWORD=${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: xelin
+      DB_USER: xelin
+      DB_PASSWORD: ${DB_PASSWORD}
 
-      # 👇 LDAP config (viktigt för Spring Boot senare)
-      - LDAP_URL=ldap://ldap:389
-      - LDAP_BASE_DN=dc=foi,dc=se
-
+      LDAP_URL: ldap://openldap:389
+      LDAP_BASE_DN: dc=foi,dc=se
+      LDAP_BIND_DN: cn=admin,dc=foi,dc=se
+      LDAP_BIND_PASSWORD: admin
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
-      ldap:
+      openldap:
         condition: service_started
 
   db:
     image: postgres:17-alpine
     environment:
-      - POSTGRES_DB=xelin
-      - POSTGRES_USER=xelin
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      POSTGRES_DB: xelin
+      POSTGRES_USER: xelin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -50,19 +50,29 @@ services:
       timeout: 5s
       retries: 5
 
-  ldap:
-    image: osixia/openldap:2.6.10-alpha
-    container_name: ldap
-    hostname: ldap.foi.se
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: openldap
+    hostname: ldap.foi.se              # FIXAD: Synkad mot foi.se
+    restart: unless-stopped
     ports:
       - "389:389"
+      - "636:636"
     environment:
-      LDAP_ORGANISATION: "FOI"
-      LDAP_DOMAIN: "foi.se"
-      LDAP_ADMIN_PASSWORD: "admin"
+      - LDAP_ORGANISATION=FOI
+      - LDAP_DOMAIN=foi.se
+      - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_CONFIG_PASSWORD=config
     volumes:
       - ldap_data:/var/lib/ldap
       - ldap_config:/etc/ldap/slapd.d
+      - ./ldap/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/bootstrap.ldif
+    command: [ "--copy-service" ]
+    healthcheck:                       # FIXAD: Rensat dubbel-etikett
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost", "-b", "dc=foi,dc=se", "-D", "cn=admin,dc=foi,dc=se", "-w", "admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   xelin_pgdata:

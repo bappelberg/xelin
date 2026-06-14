@@ -5,17 +5,19 @@ spring:
   application:
     name: xelin
 
+  # Databaskonfiguration (eftersom jag har Postgres med i min Compose)
   datasource:
-    url: jdbc:postgresql://db:5432/xelin
-    username: xelin
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xelin}
+    username: ${DB_USER:xelin}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   ldap:
-    urls: ldap://ldap:389
-    base: dc=foi,dc=se
-    username: cn=admin,dc=foi,dc=se
-    password: admin
+    # Hämtar värden från miljövariablerna i Docker Compose
+    urls: ${LDAP_URL:ldap://localhost:389}
+    base: ${LDAP_BASE_DN:dc=foi,dc=se}
+    username: ${LDAP_BIND_DN:cn=admin,dc=foi,dc=se}
+    password: ${LDAP_BIND_PASSWORD:admin}
 
 logging:
   level:
