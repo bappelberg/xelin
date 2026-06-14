@@ -1,4 +1,4 @@
-package se.foi.xelin.auth;
+package se.foi.xelin.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,10 +11,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 @Configuration
-public class LdapSecurityConfig {
+public class WebSecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(BaseLdapPathContextSource contextSource) {
@@ -44,6 +46,15 @@ public class LdapSecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
+            )
+            .logout(logout -> logout
+            .logoutUrl("/api/auth/logout") // URL:en som frontend ska skicka sitt POST-anrop till
+            .invalidateHttpSession(true)   // Dödar sessionen på servern direkt
+            .clearAuthentication(true)     // Tömmer trådens säkerhetskontext (loggar ut användaren i Java)
+            .deleteCookies("JSESSIONID")   // Säger till webbläsaren att radera inloggnings-cookien
+            .logoutSuccessHandler((request, response, authentication) -> {
+                response.setStatus(HttpServletResponse.SC_OK); // Returnerar HTTP 200 OK istället för att skicka en HTML-redirect
+                })
             )
             
             // 2. SecurityContextRepository skapas direkt här i stället för en egen metod
