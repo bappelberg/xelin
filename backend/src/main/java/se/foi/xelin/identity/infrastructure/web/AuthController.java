@@ -1,27 +1,30 @@
-package se.foi.xelin.auth;
+package se.foi.xelin.identity.infrastructure.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import se.foi.xelin.identity.domain.model.AuthenticatedUser;
+import se.foi.xelin.identity.application.port.in.AuthenticateUserUseCase;
 
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
+
+    private final AuthenticateUserUseCase authenticateUserUseCase;
     private final HttpSessionSecurityContextRepository securityContextRepository =
         new HttpSessionSecurityContextRepository();
 
-    public AuthController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    public AuthController(AuthenticateUserUseCase authenticateUserUseCase) {
+        this.authenticateUserUseCase = authenticateUserUseCase;
     }
 
     @PostMapping("/login")
@@ -31,17 +34,22 @@ public class AuthController {
         HttpServletResponse response
     ) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+            AuthenticatedUser user = authenticateUserUseCase.authenticate(
+                loginRequest.getUsername(), loginRequest.getPassword()
+            );
+            var authorities = user.getRoles().stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+            var token = UsernamePasswordAuthenticationToken.authenticated(
+                user.getUsername(), null, authorities
             );
             SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
+            context.setAuthentication(token);
             SecurityContextHolder.setContext(context);
             securityContextRepository.saveContext(context, request, response);
-            return ResponseEntity.ok(authentication.getName());
+            return ResponseEntity.ok(user.getUsername());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Fel användarnamn eller lösenord");
         }
     }
-
 }

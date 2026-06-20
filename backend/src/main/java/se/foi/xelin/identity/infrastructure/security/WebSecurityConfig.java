@@ -1,4 +1,4 @@
-package se.foi.xelin.security;
+package se.foi.xelin.identity.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

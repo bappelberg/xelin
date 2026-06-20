@@ -1,4 +1,4 @@
-package se.foi.xelin.auth;
+package se.foi.xelin.identity.infrastructure.web;
 
 public class LoginRequest {
     private String username;
