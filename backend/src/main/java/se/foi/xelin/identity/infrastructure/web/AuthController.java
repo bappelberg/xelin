@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import se.foi.xelin.identity.domain.model.AuthenticatedUser;
 import se.foi.xelin.identity.application.port.in.AuthenticateUserUseCase;
@@ -19,11 +20,11 @@ import java.util.stream.Collectors;
 public class AuthController {
 
     private final AuthenticateUserUseCase authenticateUserUseCase;
-    private final HttpSessionSecurityContextRepository securityContextRepository =
-        new HttpSessionSecurityContextRepository();
+    private final SecurityContextRepository securityContextRepository;
 
-    public AuthController(AuthenticateUserUseCase authenticateUserUseCase) {
+    public AuthController(AuthenticateUserUseCase authenticateUserUseCase, SecurityContextRepository securityContextRepository) {
         this.authenticateUserUseCase = authenticateUserUseCase;
+        this.securityContextRepository = securityContextRepository;
     }
 
     @PostMapping("/login")
