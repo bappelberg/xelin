@@ -10,12 +10,16 @@ export default async function Dashboard() {
     const cookieStore = await cookies();
     const jsessionid = cookieStore.get("JSESSIONID")?.value;
 
+    // Server-side anrop → absolut URL från miljövariabel (KR-904). Proxyn i
+    // next.config.ts gäller bara webbläsarens relativa /api-anrop.
+    const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8080";
+
     try {
-      await fetch("http://localhost:8080/api/auth/logout", {
+      await fetch(`${backendUrl}/api/auth/logout`, {
         method: "POST",
         headers: { "Cookie": `JSESSIONID=${jsessionid}` }
       });
-    } catch (e) {
+    } catch {
       console.error("Backend kunde inte nås, men vi rensar lokalt.");
     }
 

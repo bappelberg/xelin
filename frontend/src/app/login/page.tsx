@@ -19,7 +19,8 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      // Samma origin som appen — proxas server-side till backend (next.config.ts).
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,7 +37,11 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Skicka vidare dit användaren var på väg (sätts av proxy.ts), annars dashboard.
+      // Endast interna sökvägar tillåts — skyddar mot öppen omdirigering.
+      const next = new URLSearchParams(window.location.search).get("next");
+      const target = next && /^\/(?!\/)/.test(next) ? next : "/dashboard";
+      router.push(target);
     } finally {
       setLoading(false);
     }
@@ -70,7 +75,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex flex-col items-center mb-8 lg:hidden">
             <Image
-              src="/foi-vapen.png"
+              src="/foi-weapon.png"
               alt="FOI vapensköld"
               width={80}
               height={130}

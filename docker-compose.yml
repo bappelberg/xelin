@@ -4,6 +4,8 @@ services:
       context: ./frontend
     environment:
       NODE_ENV: development
+      # Backend-URL via miljövariabel (KR-904) — /api proxas server-side, ingen CORS.
+      BACKEND_URL: http://backend:8080
     ports:
       - "3000:3000"
     volumes:
