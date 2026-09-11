@@ -8,30 +8,48 @@ import java.time.Instant;
 public class TicketResponse {
 
     private final Long id;
+    private final String title;
+    private final String description;
     private final String status;
     private final String priority;
     private final String category;
+    private final String reporter;
     private final Instant createdAt;
 
-    private TicketResponse(Long id, String status, String priority, String category, Instant createdAt) {
+    private TicketResponse(Long id, String title, String description, String status, String priority,
+                           String category, String reporter, Instant createdAt) {
         this.id = id;
+        this.title = title;
+        this.description = description;
         this.status = status;
         this.priority = priority;
         this.category = category;
+        this.reporter = reporter;
         this.createdAt = createdAt;
     }
 
     public static TicketResponse from(Ticket ticket) {
         return new TicketResponse(
                 ticket.getId(),
+                ticket.getTitle(),
+                ticket.getDescription(),
                 ticket.getStatus().name(),
                 ticket.getPriority().name(),
                 ticket.getCategory().name(),
+                ticket.getReporter(),
                 ticket.getCreatedAt());
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public String getStatus() {
@@ -44,6 +62,10 @@ public class TicketResponse {
 
     public String getCategory() {
         return category;
+    }
+
+    public String getReporter() {
+        return reporter;
     }
 
     public Instant getCreatedAt() {

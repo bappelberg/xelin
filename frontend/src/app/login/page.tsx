@@ -33,7 +33,7 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        setError("Fel användarnamn eller lösenord");
+        setError("Incorrect username or password");
         return;
       }
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-[#1e3d8c] flex-col items-center justify-center gap-8 p-12">
         <Image
           src="/foi-weapon.png"
-          alt="FOI vapensköld"
+          alt="FOI coat of arms"
           width={180}
           height={300}
           priority
@@ -76,7 +76,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center mb-8 lg:hidden">
             <Image
               src="/foi-weapon.png"
-              alt="FOI vapensköld"
+              alt="FOI coat of arms"
               width={80}
               height={130}
               priority
@@ -87,15 +87,15 @@ export default function LoginPage() {
           </div>
 
           <h2 className="text-2xl font-semibold text-zinc-900 mb-1">
-            Logga in
+            Log in
           </h2>
           <p className="text-sm text-zinc-500 mb-8">
-            Ange dina LDAP-uppgifter
+            Enter your LDAP credentials
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Användarnamn
+              Username
               <input
                 type="text"
                 required
@@ -107,7 +107,7 @@ export default function LoginPage() {
             </label>
 
             <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-              Lösenord
+              Password
               <input
                 type="password"
                 required
@@ -129,7 +129,7 @@ export default function LoginPage() {
               disabled={loading}
               className="mt-1 rounded-lg bg-[#1e3d8c] hover:bg-[#162e6a] active:bg-[#0f2050] px-5 py-2.5 text-sm font-medium text-white disabled:opacity-50 transition-colors cursor-pointer"
             >
-              {loading ? "Loggar in…" : "Logga in"}
+              {loading ? "Logging in…" : "Log in"}
             </button>
           </form>
         </div>

@@ -49,7 +49,7 @@ public class AuthController {
             securityContextRepository.saveContext(context, request, response);
             return ResponseEntity.ok(user.getUsername());
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Fel användarnamn eller lösenord");
+            return ResponseEntity.status(401).body("Incorrect username or password");
         }
     }
 }

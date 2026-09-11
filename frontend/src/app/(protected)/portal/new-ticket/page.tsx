@@ -2,27 +2,26 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 // Matchar backendens enum-värden (se.foi.xelin.ticket.domain.model).
-const PRIORITETER = [
-  { value: "LAG", label: "Låg" },
+const PRIORITIES = [
+  { value: "LOW", label: "Low" },
   { value: "NORMAL", label: "Normal" },
-  { value: "HOG", label: "Hög" },
-  { value: "KRITISK", label: "Kritisk" },
+  { value: "HIGH", label: "High" },
+  { value: "CRITICAL", label: "Critical" },
 ] as const;
 
-const KATEGORIER = [
-  { value: "HARDVARA", label: "Hårdvara" },
-  { value: "MJUKVARA", label: "Programvara" },
-  { value: "KONTO", label: "Konto & behörighet" },
-  { value: "NATVERK", label: "Nätverk" },
-  { value: "OVRIGT", label: "Övrigt" },
+const CATEGORIES = [
+  { value: "HARDWARE", label: "Hardware" },
+  { value: "SOFTWARE", label: "Software" },
+  { value: "ACCOUNT", label: "Account & permissions" },
+  { value: "NETWORK", label: "Network" },
+  { value: "OTHER", label: "Other" },
 ] as const;
 
 type Result = { id: string } | null;
 
-export default function NyttArendePage() {
+export default function NewTicketPage() {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
@@ -52,31 +51,23 @@ export default function NyttArendePage() {
       }
 
       if (res.status === 400) {
-        setError("Kontrollera att alla fält är korrekt ifyllda.");
+        setError("Check that all fields are filled in correctly.");
         return;
       }
 
       if (!res.ok) {
-        setError("Ärendet kunde inte registreras just nu. Försök igen senare.");
+        setError("The ticket could not be submitted right now. Please try again later.");
         return;
       }
 
       // KR-202: systemet tilldelar ett unikt ärende-ID vid skapande.
       const body = await res.json().catch(() => null);
       const locationId = res.headers.get("Location")?.split("/").pop();
-      setResult({ id: body?.id ?? body?.ticketId ?? locationId ?? "okänt" });
+      setResult({ id: body?.id ?? body?.ticketId ?? locationId ?? "unknown" });
     } catch {
-      setError("Kunde inte nå tjänsten. Kontrollera din uppkoppling.");
+      setError("Could not reach the service. Check your connection.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      router.push("/login");
     }
   }
 
@@ -90,83 +81,62 @@ export default function NyttArendePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/foi-weapon.png"
-            alt="FOI vapensköld"
-            width={22}
-            height={36}
-          />
-          <span className="text-sm font-semibold text-[#1e3d8c]">
-            Xelin Serviceportal
-          </span>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-zinc-500 hover:text-zinc-900 cursor-pointer transition-colors"
-        >
-          Logga ut
-        </button>
-      </header>
-
-      <main className="flex-1 flex justify-center px-6 py-10">
-        <div className="w-full max-w-xl">
+    <main className="flex-1 flex justify-center px-6 py-10">
+      <div className="w-full max-w-xl">
           <h1 className="text-2xl font-semibold text-zinc-900 mb-1">
-            Registrera ärende
+            Report a ticket
           </h1>
           <p className="text-sm text-zinc-500 mb-8">
-            Beskriv ditt IT-supportärende så återkommer helpdesk.
+            Describe your IT support issue and the helpdesk will get back to you.
           </p>
 
           {result ? (
             <div className="rounded-xl border border-green-200 bg-green-50 p-6">
               <h2 className="text-lg font-semibold text-green-900">
-                Ärendet är registrerat
+                Ticket submitted
               </h2>
               <p className="mt-1 text-sm text-green-800">
-                Ditt ärende-ID är{" "}
-                <span className="font-mono font-semibold">{result.id}</span>. Du
-                kan följa status via din e-post.
+                Your ticket ID is{" "}
+                <span className="font-mono font-semibold">{result.id}</span>. You
+                can follow its status via email.
               </p>
               <button
                 onClick={resetForm}
                 className="mt-5 rounded-lg bg-[#1e3d8c] hover:bg-[#162e6a] px-4 py-2 text-sm font-medium text-white cursor-pointer transition-colors"
               >
-                Registrera ett till ärende
+                Submit another ticket
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-                Titel
+                Title
                 <input
                   type="text"
                   required
                   maxLength={200}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Kort sammanfattning"
+                  placeholder="Short summary"
                   className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors"
                 />
               </label>
 
               <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-                Beskrivning
+                Description
                 <textarea
                   required
                   rows={6}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Vad har hänt? Vilken utrustning eller tjänst gäller det? Felmeddelanden?"
+                  placeholder="What happened? Which equipment or service is affected? Any error messages?"
                   className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors resize-y"
                 />
               </label>
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-                  Kategori
+                  Category
                   <select
                     required
                     value={category}
@@ -174,9 +144,9 @@ export default function NyttArendePage() {
                     className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors"
                   >
                     <option value="" disabled>
-                      Välj kategori
+                      Select a category
                     </option>
-                    {KATEGORIER.map((k) => (
+                    {CATEGORIES.map((k) => (
                       <option key={k.value} value={k.value}>
                         {k.label}
                       </option>
@@ -185,14 +155,14 @@ export default function NyttArendePage() {
                 </label>
 
                 <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-                  Prioritet
+                  Priority
                   <select
                     required
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
                     className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors"
                   >
-                    {PRIORITETER.map((p) => (
+                    {PRIORITIES.map((p) => (
                       <option key={p.value} value={p.value}>
                         {p.label}
                       </option>
@@ -212,12 +182,11 @@ export default function NyttArendePage() {
                 disabled={loading}
                 className="mt-1 self-start rounded-lg bg-[#1e3d8c] hover:bg-[#162e6a] active:bg-[#0f2050] px-6 py-2.5 text-sm font-medium text-white disabled:opacity-50 transition-colors cursor-pointer"
               >
-                {loading ? "Skickar…" : "Skicka in ärende"}
+                {loading ? "Submitting…" : "Submit ticket"}
               </button>
             </form>
           )}
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

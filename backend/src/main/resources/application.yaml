@@ -14,9 +14,8 @@ spring:
 
   jpa:
     hibernate:
-      # TODO: byt till 'validate' när Flyway kopplas in (KR-902). Tills vidare skapar
-      # Hibernate schemat från entiteterna.
-      ddl-auto: update
+      # Schemat hanteras via egna SQL-skript (KR-902), inte av Hibernate.
+      ddl-auto: none
     open-in-view: false
 
   ldap:

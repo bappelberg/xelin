@@ -5,11 +5,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import se.foi.xelin.ticket.application.port.in.CreateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
+import se.foi.xelin.ticket.application.port.in.UpdateTicketCommand;
+import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
 import se.foi.xelin.ticket.application.port.out.TicketRepository;
 import se.foi.xelin.ticket.domain.model.Ticket;
+import se.foi.xelin.ticket.domain.model.TicketNotFoundException;
+
+import java.util.List;
 
 @Service
-public class TicketService implements CreateTicketUseCase {
+public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, GetTicketUseCase, UpdateTicketUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(TicketService.class);
 
@@ -35,6 +42,30 @@ public class TicketService implements CreateTicketUseCase {
                 saved.getId(), saved.getReporter(), saved.getPriority(), saved.getCategory());
 
         // TODO (audit): emittera TICKET_CREATED via audit-kontexten när den finns — se skill audit-event.
+        return saved;
+    }
+
+    @Override
+    public List<Ticket> listAll() {
+        return ticketRepository.findAll();
+    }
+
+    @Override
+    public Ticket getById(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new TicketNotFoundException(id));
+    }
+
+    @Override
+    public Ticket update(UpdateTicketCommand command) {
+        Ticket ticket = getById(command.ticketId());
+        Ticket updated = ticket.update(command.status(), command.priority(), command.category());
+        Ticket saved = ticketRepository.save(updated);
+
+        // TODO (audit): emittera TICKET_UPDATED via audit-kontexten när den finns — se skill audit-event.
+        log.info("Ärende uppdaterat: id={} status={} priority={} kategori={}",
+                saved.getId(), saved.getStatus(), saved.getPriority(), saved.getCategory());
+
         return saved;
     }
 }

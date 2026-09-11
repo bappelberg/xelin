@@ -46,4 +46,4 @@ auditEvents.record(AuditEvent.of(
         null));
 ```
 
-Se även skill `hexagonal-slice` (strukturen för `audit`) och `flyway-migration` (audit-tabellen).
+Se även skill `hexagonal-slice` (strukturen för `audit`). Audit-tabellen skapas via ett eget SQL-skript i repot (KR-902), inte via migreringsverktyg.

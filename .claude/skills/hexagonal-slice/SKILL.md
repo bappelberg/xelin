@@ -42,5 +42,5 @@ se.foi.xelin.<context>/
 6. `infrastructure/persistence`: JpaEntity + Spring Data-repository + PersistenceAdapter (`implements` port/out).
 7. `infrastructure/web`: Controller (se skill `rest-endpoint`) + Request/Response-DTO:er.
 8. Om domänen ändrar tillstånd som ska spåras → emittera audit-händelse (se skill `audit-event`).
-9. Schemat ägs av Flyway (se skill `flyway-migration`), inte av `ddl-auto`.
+9. Schemat ägs av versionshanterade SQL-skript i repot (KR-902), inte av `ddl-auto`.
 10. Tester: service med Mockito, controller med MockMvc.

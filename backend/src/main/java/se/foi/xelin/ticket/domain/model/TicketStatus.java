@@ -1,11 +1,11 @@
 package se.foi.xelin.ticket.domain.model;
 
-// Ärendets livscykelstatus (KR-203). Ett nytt ärende börjar som NY.
+// Ärendets livscykelstatus (KR-203). Ett nytt ärende börjar som NEW.
 public enum TicketStatus {
-    NY,
-    TILLDELAD,
-    PAGAENDE,
-    VANTANDE,
-    LOST,
-    STANGD
+    NEW,
+    ASSIGNED,
+    IN_PROGRESS,
+    PENDING,
+    RESOLVED,
+    CLOSED
 }

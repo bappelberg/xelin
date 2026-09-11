@@ -15,11 +15,11 @@ public class Ticket {
     private final String reporter;       // uid för slutanvändaren som skapade ärendet
     private final Instant createdAt;
 
-    // Skapar ett nytt ärende: status NY (KR-203) och skapandetidpunkt sätts direkt.
+    // Skapar ett nytt ärende: status NEW (KR-203) och skapandetidpunkt sätts direkt.
     public static Ticket create(String title, String description, TicketPriority priority,
                                 TicketCategory category, String reporter) {
         return new Ticket(null, title, description, priority, category,
-                TicketStatus.NY, reporter, Instant.now());
+                TicketStatus.NEW, reporter, Instant.now());
     }
 
     // Återskapar ett ärende från lagringen.
@@ -72,5 +72,11 @@ public class Ticket {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    // Handläggare ändrar status, prioritet och kategori (KR-203/KR-301). Övriga fält är
+    // oföränderliga efter registrering — ny instans, samma id/skapandetidpunkt.
+    public Ticket update(TicketStatus newStatus, TicketPriority newPriority, TicketCategory newCategory) {
+        return new Ticket(id, title, description, newPriority, newCategory, newStatus, reporter, createdAt);
     }
 }

@@ -46,6 +46,9 @@ services:
       - "5432:5432"
     volumes:
       - xelin_pgdata:/var/lib/postgresql/data
+      # Officiella postgres-imagen kör allt i docker-entrypoint-initdb.d automatiskt,
+      # men bara vid FÖRSTA uppstarten mot en tom volym (KR-902: samma skript som db/setup.sh).
+      - ./db/scripts:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U xelin -d xelin"]
       interval: 10s

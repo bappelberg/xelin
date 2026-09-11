@@ -27,11 +27,11 @@ public class ApiExceptionHandler {
         Map<String, String> errors = new LinkedHashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.putIfAbsent(error.getField(),
-                    error.getDefaultMessage() == null ? "ogiltigt värde" : error.getDefaultMessage());
+                    error.getDefaultMessage() == null ? "invalid value" : error.getDefaultMessage());
         }
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problem.setTitle("Ogiltig indata");
-        problem.setDetail("Ett eller flera fält är ogiltiga.");
+        problem.setTitle("Invalid input");
+        problem.setDetail("One or more fields are invalid.");
         problem.setProperty("errors", errors);
         return problem;
     }
@@ -39,24 +39,24 @@ public class ApiExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, IllegalArgumentException.class})
     public ProblemDetail handleUnreadable(Exception ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problem.setTitle("Ogiltig indata");
-        problem.setDetail("Begäran kunde inte tolkas.");
+        problem.setTitle("Invalid input");
+        problem.setDetail("The request could not be parsed.");
         return problem;
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
-        problem.setTitle("Åtkomst nekad");
-        problem.setDetail("Du saknar behörighet för den här åtgärden.");
+        problem.setTitle("Access denied");
+        problem.setDetail("You do not have permission to perform this action.");
         return problem;
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ProblemDetail handleAuthentication(AuthenticationException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
-        problem.setTitle("Ej autentiserad");
-        problem.setDetail("Inloggning krävs.");
+        problem.setTitle("Not authenticated");
+        problem.setDetail("Login is required.");
         return problem;
     }
 
@@ -64,8 +64,8 @@ public class ApiExceptionHandler {
     public ProblemDetail handleUnexpected(Exception ex) {
         log.error("Oväntat fel vid API-anrop", ex);
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        problem.setTitle("Internt fel");
-        problem.setDetail("Ett oväntat fel inträffade. Försök igen senare.");
+        problem.setTitle("Internal error");
+        problem.setDetail("An unexpected error occurred. Please try again later.");
         return problem;
     }
 }
