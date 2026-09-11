@@ -12,6 +12,13 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  jpa:
+    hibernate:
+      # TODO: byt till 'validate' när Flyway kopplas in (KR-902). Tills vidare skapar
+      # Hibernate schemat från entiteterna.
+      ddl-auto: update
+    open-in-view: false
+
   ldap:
     # Hämtar värden från miljövariablerna i Docker Compose
     urls: ${LDAP_URL:ldap://localhost:389}

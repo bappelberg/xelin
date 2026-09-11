@@ -8,14 +8,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.ldap.LdapPasswordComparisonAuthenticationManagerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.web.cors.CorsConfiguration;
 
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.util.List;
 
 @Configuration
 public class WebSecurityConfig {
@@ -27,6 +25,16 @@ public class WebSecurityConfig {
                 contextSource, new BCryptPasswordEncoder());
         factory.setUserDnPatterns("uid={0},ou=people");
         factory.setPasswordAttribute("userPassword");
+
+        // Rollhärledning från gruppmedlemskap (KR-102): cn=User -> behörighet ROLE_User.
+        // convertToUpperCase=false behåller gruppnamnet exakt så att hasRole('User') matchar.
+        DefaultLdapAuthoritiesPopulator authorities =
+            new DefaultLdapAuthoritiesPopulator(contextSource, "ou=groups");
+        authorities.setGroupSearchFilter("(member={0})");
+        authorities.setGroupRoleAttribute("cn");
+        authorities.setConvertToUpperCase(false);
+        factory.setLdapAuthoritiesPopulator(authorities);
+
         return factory.createAuthenticationManager();
     }
 
@@ -51,20 +59,18 @@ public class WebSecurityConfig {
                 * tvingar du Spring Boot att hålla sig lugn tills användaren faktiskt knappar in sitt lösenord igen!
                 * */
 
-            // 1. CORS konfigureras direkt här via en lambda-funktion
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:3000"));
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(true);
-                return config;
-            }))
+            // Ingen CORS-konfiguration: frontend/portal pratar med API:et via Next.js server-side
+            // proxy (samma origin), så inga cross-origin-anrop når backend.
 
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                 .anyRequest().authenticated()
             )
+
+            // REST-API: svara 401 på oautentiserade anrop i stället för redirect till inloggningssida.
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                (request, response, authException) ->
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
             .logout(logout -> logout
             .logoutUrl("/api/auth/logout") // URL:en som frontend ska skicka sitt POST-anrop till
             .invalidateHttpSession(true)   // Dödar sessionen på servern direkt

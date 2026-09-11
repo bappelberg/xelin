@@ -25,3 +25,31 @@ cn: Bob Hamilton
 sn: Hamilton
 uid: bob
 userPassword: $2a$10$X/Lsg42oQwUVvusQW6Rb7uNXD3uwCQZRX7qnnEfZHCak8T82HhY8G
+
+# Organisationsenhet för grupper — roller härleds från medlemskap (KR-102)
+dn: ou=groups,dc=foi,dc=se
+objectClass: top
+objectClass: organizationalUnit
+ou: groups
+
+# Roll User: alla FOI-anställda kan registrera och följa egna ärenden
+dn: cn=User,ou=groups,dc=foi,dc=se
+objectClass: top
+objectClass: groupOfNames
+cn: User
+member: uid=ben,ou=people,dc=foi,dc=se
+member: uid=bob,ou=people,dc=foi,dc=se
+
+# Roll Agent: handläggare (IT-support)
+dn: cn=Agent,ou=groups,dc=foi,dc=se
+objectClass: top
+objectClass: groupOfNames
+cn: Agent
+member: uid=ben,ou=people,dc=foi,dc=se
+
+# Roll Admin: systemadministratör
+dn: cn=Admin,ou=groups,dc=foi,dc=se
+objectClass: top
+objectClass: groupOfNames
+cn: Admin
+member: uid=ben,ou=people,dc=foi,dc=se

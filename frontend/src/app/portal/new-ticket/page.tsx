@@ -4,20 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// Måste matcha backendens enum-värden (byggs i nästa steg — POST /api/tickets).
+// Matchar backendens enum-värden (se.foi.xelin.ticket.domain.model).
 const PRIORITETER = [
-  { value: "LOW", label: "Låg" },
+  { value: "LAG", label: "Låg" },
   { value: "NORMAL", label: "Normal" },
-  { value: "HIGH", label: "Hög" },
-  { value: "CRITICAL", label: "Kritisk" },
+  { value: "HOG", label: "Hög" },
+  { value: "KRITISK", label: "Kritisk" },
 ] as const;
 
 const KATEGORIER = [
-  { value: "HARDWARE", label: "Hårdvara" },
-  { value: "SOFTWARE", label: "Programvara" },
-  { value: "ACCOUNT", label: "Konto & behörighet" },
-  { value: "NETWORK", label: "Nätverk" },
-  { value: "OTHER", label: "Övrigt" },
+  { value: "HARDVARA", label: "Hårdvara" },
+  { value: "MJUKVARA", label: "Programvara" },
+  { value: "KONTO", label: "Konto & behörighet" },
+  { value: "NATVERK", label: "Nätverk" },
+  { value: "OVRIGT", label: "Övrigt" },
 ] as const;
 
 type Result = { id: string } | null;
