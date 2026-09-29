@@ -4,8 +4,8 @@ package se.foi.xelin.ticket.domain.model;
 public enum TicketStatus {
     NEW,
     ASSIGNED,
-    IN_PROGRESS,
-    PENDING,
-    RESOLVED,
+    ONGOING,
+    WAITING,
+    SOLVED,
     CLOSED
 }

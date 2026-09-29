@@ -11,7 +11,7 @@ CREATE TABLE ticket (
     category     VARCHAR(20) NOT NULL
                      CHECK (category IN ('HARDWARE', 'SOFTWARE', 'ACCOUNT', 'NETWORK', 'OTHER')),
     status       VARCHAR(20) NOT NULL
-                     CHECK (status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS', 'PENDING', 'RESOLVED', 'CLOSED')),
+                     CHECK (status IN ('NEW', 'ASSIGNED', 'ONGOING', 'WAITING', 'SOLVED', 'CLOSED')),
     reporter     VARCHAR(100) NOT NULL,
     created_at   TIMESTAMPTZ NOT NULL
 );

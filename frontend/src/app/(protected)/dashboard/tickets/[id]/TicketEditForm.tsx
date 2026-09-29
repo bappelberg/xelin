@@ -9,9 +9,9 @@ import type { TicketDetail } from "./page";
 const STATUSES = [
   { value: "NEW", label: "New" },
   { value: "ASSIGNED", label: "Assigned" },
-  { value: "IN_PROGRESS", label: "In progress" },
-  { value: "PENDING", label: "Pending" },
-  { value: "RESOLVED", label: "Resolved" },
+  { value: "ONGOING", label: "Ongoing" },
+  { value: "WAITING", label: "Waiting" },
+  { value: "SOLVED", label: "Solved" },
   { value: "CLOSED", label: "Closed" },
 ] as const;
 

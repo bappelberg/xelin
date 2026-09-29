@@ -20,7 +20,6 @@ Term, Definition
 * Ärende = En registrerad IT-supportförfrågan eller incident
 * Handläggare = IT-personal med behörighet att hantera ärenden
 * Slutanvändare = FOI-anställd som skapar ärenden
-* SLA = Service Level Agreement, överenskommen svarstid
 * LDAP = Lightweight Directory Access Protocol
 * OpenLDAP = Öppen katalogtjänst som används för autentisering
 
@@ -33,7 +32,7 @@ Anställd vid FOI med tillgång till systemet via LDAP-konto. Kan skapa, följa 
 ### 3.2 Handläggare (Agent)
 IT-supportpersonal. Kan hantera alla ärenden, tilldela, eskalera och stänga ärenden. Tillgång till kövy och statistiköversikt.
 ### 3.3 Administratör (Admin)
-IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, SLA-inställningar, kategorier och granskningslogg.
+IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, kategorier och granskningslogg.
 
 ## 4. Funktionella krav
 ### 4.1 Autentisering och behörighet
@@ -45,23 +44,21 @@ IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, SLA-instä
 ### 4.2 Ärendehantering
 * KR-201 Slutanvändare ska kunna skapa ärenden med titel, beskrivning, prioritet och kategori.
 * KR-202 Systemet ska automatiskt tilldela ett unikt ärende-ID vid skapande.
-* KR-203 Följande ärendestatusar ska stödjas: Ny, Tilldelad, Pågående, Väntande, Löst, Stängd.
+* KR-203 Följande ärendestatusar ska stödjas: New, Assigned, Ongoing, Waiting, Solved, Closed.
 * KR-204 Handläggare ska kunna tilldela ärenden till sig själva eller annan handläggare.
-* KR-205 Handläggare ska kunna eskalera ärenden med motivering.
+* KR-205 Handläggare ska kunna ändra på prioritet.
 * KR-206 Alla statusändringar ska loggas med tidsstämpel och ansvarig användare.
 * KR-207 Slutanvändare ska kunna följa status på egna ärenden i realtid.
 * KR-208 Handläggare och slutanvändare ska kunna lägga till kommentarer på ett ärende. Interna kommentarer ska endast vara synliga för handläggare och administratörer.
 * KR-209 Systemet ska stödja filbilagor upp till 10 MB per ärende.
 ### 4.3 Köhantering och tilldelning
 * KR-301 Handläggare ska ha tillgång till en samlad ärendekö filtrerad på status, prioritet och kategori.
-* KR-302 Systemet ska visa SLA-status per ärende med visuell indikering vid risk för överträdelse.
 * KR-303 Automatisk tilldelning baserad på kategori ska kunna konfigureras av administratör.
 ### 4.4 Notifieringar
 * KR-401 Systemet ska skicka e-postnotifiering till slutanvändaren vid statusändring på dennes ärende.
 * KR-402 Handläggare ska notifieras vid tilldelning av nytt ärende.
-* KR-403 Administratör ska notifieras vid SLA-överträdelse.
 ### 4.5 Rapportering och statistik
-* KR-501 Administratörer och handläggare ska ha tillgång till en statistikvy med ärendevolym, genomsnittlig lösningstid och SLA-uppfyllnad.
+* KR-501 Administratörer och handläggare ska ha tillgång till en statistikvy med ärendevolym, genomsnittlig lösningstid
 * KR-502 Statistik ska kunna filtreras på tidsperiod och kategori.
 * KR-503 Granskningslogg ska vara tillgänglig för administratör och visa alla systemhändelser.
 
@@ -100,7 +97,7 @@ IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, SLA-instä
 * Integration med externa ärendesystem
 * Mobilapplikation
 * Automatiserad incidentdetektering
-* Fakturering eller SLA-avtal mot externa parter
+
 
 ### 6.3 Externa beroenden
 
