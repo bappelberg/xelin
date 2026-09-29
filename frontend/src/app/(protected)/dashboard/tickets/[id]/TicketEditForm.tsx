@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { TicketDetail } from "./page";
+
+// Matchar TicketCommentResponse (se.foi.xelin.ticket.infrastructure.web).
+type TicketComment = {
+  id: number;
+  author: string;
+  body: string;
+  internal: boolean;
+  createdAt: string;
+};
 
 // Matchar backendens enum-värden (se.foi.xelin.ticket.domain.model).
 const STATUSES = [
@@ -38,6 +47,72 @@ export default function TicketEditForm({ ticket }: { ticket: TicketDetail }) {
   const [category, setCategory] = useState(ticket.category);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [comments, setComments] = useState<TicketComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentBody, setCommentBody] = useState("");
+  const [commentInternal, setCommentInternal] = useState(false);
+  const [commentSaving, setCommentSaving] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadComments() {
+      try {
+        const res = await fetch(`/api/tickets/${ticket.id}/comments`);
+        if (res.status === 401) {
+          router.push(`/login?next=/dashboard/tickets/${ticket.id}`);
+          return;
+        }
+        if (!res.ok) return;
+        const data = (await res.json()) as TicketComment[];
+        if (!cancelled) setComments(data);
+      } catch {
+        // Tyst fel — kommentarslistan lämnas tom, resten av sidan fungerar ändå.
+      } finally {
+        if (!cancelled) setCommentsLoading(false);
+      }
+    }
+
+    loadComments();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket.id, router]);
+
+  async function handleCommentSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setCommentSaving(true);
+    setCommentError(null);
+
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: commentBody, internal: commentInternal }),
+      });
+
+      if (res.status === 401) {
+        router.push(`/login?next=/dashboard/tickets/${ticket.id}`);
+        return;
+      }
+
+      if (!res.ok) {
+        setCommentError("The comment could not be saved. Please try again.");
+        return;
+      }
+
+      const created = (await res.json()) as TicketComment;
+      setComments((prev) => [created, ...prev]);
+      setCommentBody("");
+      setCommentInternal(false);
+    } catch {
+      setCommentError("Could not reach the service. Check your connection.");
+    } finally {
+      setCommentSaving(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -148,6 +223,79 @@ export default function TicketEditForm({ ticket }: { ticket: TicketDetail }) {
           {saving ? "Saving…" : "Save changes"}
         </button>
       </form>
+
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold text-zinc-900 mb-3">Comments</h2>
+
+        {commentsLoading && <p className="text-sm text-zinc-500">Loading comments…</p>}
+
+        {!commentsLoading && comments.length === 0 && (
+          <p className="text-sm text-zinc-500">No comments yet.</p>
+        )}
+
+        <ul className="flex flex-col gap-3">
+          {comments.map((c) => (
+            <li
+              key={c.id}
+              className={`rounded-lg border px-4 py-3 ${
+                c.internal ? "border-amber-200 bg-amber-50" : "border-zinc-200 bg-zinc-50"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-xs font-medium text-zinc-700">{c.author}</span>
+                <div className="flex items-center gap-2">
+                  {c.internal && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                      Internal
+                    </span>
+                  )}
+                  <span className="text-xs text-zinc-400">
+                    {new Date(c.createdAt).toLocaleString("en-GB")}
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-zinc-700 whitespace-pre-wrap">{c.body}</p>
+            </li>
+          ))}
+        </ul>
+
+        <form onSubmit={handleCommentSubmit} className="mt-4 flex flex-col gap-3">
+          <textarea
+            value={commentBody}
+            onChange={(e) => setCommentBody(e.target.value)}
+            required
+            rows={3}
+            placeholder="Add a comment…"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors"
+          />
+
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-sm text-zinc-700">
+              <input
+                type="checkbox"
+                checked={commentInternal}
+                onChange={(e) => setCommentInternal(e.target.checked)}
+                className="rounded border-zinc-300"
+              />
+              Internal comment (only visible to agents and admins)
+            </label>
+
+            <button
+              type="submit"
+              disabled={commentSaving}
+              className="self-start rounded-lg bg-[#1e3d8c] hover:bg-[#162e6a] active:bg-[#0f2050] px-5 py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {commentSaving ? "Posting…" : "Post comment"}
+            </button>
+          </div>
+
+          {commentError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {commentError}
+            </p>
+          )}
+        </form>
+      </section>
     </div>
   );
 }

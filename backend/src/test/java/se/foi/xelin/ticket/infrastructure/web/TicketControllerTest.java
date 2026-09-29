@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import se.foi.xelin.shared.security.MethodSecurityConfig;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
 import se.foi.xelin.ticket.domain.model.Ticket;
@@ -44,6 +45,9 @@ class TicketControllerTest {
 
     @MockitoBean
     private ListTicketsUseCase listTickets;
+
+    @MockitoBean
+    private ListMyTicketsUseCase listMyTickets;
 
     @MockitoBean
     private GetTicketUseCase getTicket;
@@ -132,6 +136,44 @@ class TicketControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Skrivaren fungerar inte"))
                 .andExpect(jsonPath("$.description").value("Felkod E-52"));
+    }
+
+    @Test
+    @WithMockUser(username = "ben", roles = "User")
+    void slutanvandare_hamtar_eget_arende() throws Exception {
+        Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
+                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+        when(getTicket.getById(1001L)).thenReturn(t);
+
+        mockMvc.perform(get("/api/tickets/1001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reporter").value("ben"));
+    }
+
+    @Test
+    @WithMockUser(username = "bob", roles = "User")
+    void slutanvandare_nekas_hamta_annans_arende() throws Exception {
+        Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
+                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+        when(getTicket.getById(1001L)).thenReturn(t);
+
+        mockMvc.perform(get("/api/tickets/1001"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "ben", roles = "User")
+    void slutanvandare_listar_egna_arenden() throws Exception {
+        Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
+                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+        when(listMyTickets.listByReporter("ben")).thenReturn(List.of(t));
+
+        mockMvc.perform(get("/api/tickets/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].reporter").value("ben"));
     }
 
     @Test

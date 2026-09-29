@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-// Delad server action för utloggning — används av Navbar i både server- och klientkomponenter.
+// Delad server action för utloggning — används av Sidebar.
 export async function logout() {
   const cookieStore = await cookies();
   const jsessionid = cookieStore.get("JSESSIONID")?.value;

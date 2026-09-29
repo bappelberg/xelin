@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import se.foi.xelin.ticket.application.port.in.CreateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
@@ -16,7 +17,8 @@ import se.foi.xelin.ticket.domain.model.TicketNotFoundException;
 import java.util.List;
 
 @Service
-public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, GetTicketUseCase, UpdateTicketUseCase {
+public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, ListMyTicketsUseCase,
+        GetTicketUseCase, UpdateTicketUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(TicketService.class);
 
@@ -48,6 +50,11 @@ public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, G
     @Override
     public List<Ticket> listAll() {
         return ticketRepository.findAll();
+    }
+
+    @Override
+    public List<Ticket> listByReporter(String reporter) {
+        return ticketRepository.findByReporter(reporter);
     }
 
     @Override

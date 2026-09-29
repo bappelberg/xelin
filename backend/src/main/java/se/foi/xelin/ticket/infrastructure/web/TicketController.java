@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
 import se.foi.xelin.ticket.domain.model.Ticket;
+import se.foi.xelin.ticket.domain.model.TicketAccessDeniedException;
 import se.foi.xelin.ticket.domain.model.TicketNotFoundException;
 
 import java.net.URI;
@@ -30,13 +32,16 @@ public class TicketController {
 
     private final CreateTicketUseCase createTicket;
     private final ListTicketsUseCase listTickets;
+    private final ListMyTicketsUseCase listMyTickets;
     private final GetTicketUseCase getTicket;
     private final UpdateTicketUseCase updateTicket;
 
     public TicketController(CreateTicketUseCase createTicket, ListTicketsUseCase listTickets,
-                            GetTicketUseCase getTicket, UpdateTicketUseCase updateTicket) {
+                            ListMyTicketsUseCase listMyTickets, GetTicketUseCase getTicket,
+                            UpdateTicketUseCase updateTicket) {
         this.createTicket = createTicket;
         this.listTickets = listTickets;
+        this.listMyTickets = listMyTickets;
         this.getTicket = getTicket;
         this.updateTicket = updateTicket;
     }
@@ -62,11 +67,29 @@ public class TicketController {
         return listTickets.listAll().stream().map(TicketResponse::from).toList();
     }
 
+    // KR-207: slutanvändaren ser sina egna ärenden.
+    @GetMapping("/mine")
+    @PreAuthorize("hasRole('User')")
+    public List<TicketResponse> mine(Authentication authentication) {
+        return listMyTickets.listByReporter(authentication.getName()).stream().map(TicketResponse::from).toList();
+    }
+
     // Handläggare öppnar ett enskilt ärende för att se full information (KR-301).
+    // Slutanvändare får bara se sitt eget ärende (KR-207/KR-804) — annars 403.
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('Agent', 'Admin')")
-    public TicketResponse get(@PathVariable Long id) {
-        return TicketResponse.from(getTicket.getById(id));
+    @PreAuthorize("hasAnyRole('User', 'Agent', 'Admin')")
+    public TicketResponse get(@PathVariable Long id, Authentication authentication) {
+        Ticket ticket = getTicket.getById(id);
+        if (!isAgentOrAdmin(authentication) && !ticket.getReporter().equals(authentication.getName())) {
+            throw new TicketAccessDeniedException(id);
+        }
+        return TicketResponse.from(ticket);
+    }
+
+    private boolean isAgentOrAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_Agent")
+                        || authority.getAuthority().equals("ROLE_Admin"));
     }
 
     // Handläggare ändrar status/prioritet på ett ärende (KR-203/KR-301).
@@ -83,6 +106,14 @@ public class TicketController {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problem.setTitle("Ticket not found");
         problem.setDetail("No ticket exists with the given id.");
+        return problem;
+    }
+
+    @ExceptionHandler(TicketAccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(TicketAccessDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setTitle("Access denied");
+        problem.setDetail("You do not have permission to access this ticket.");
         return problem;
     }
 }

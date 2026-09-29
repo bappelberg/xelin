@@ -83,6 +83,18 @@ class TicketServiceTest {
     }
 
     @Test
+    void listByReporter_delegerar_till_repositoryt() {
+        Ticket t = new Ticket(1L, "Kan inte logga in", "Kontot verkar låst",
+                TicketPriority.HIGH, TicketCategory.ACCOUNT, TicketStatus.NEW,
+                "bob", Instant.now());
+        when(ticketRepository.findByReporter("bob")).thenReturn(List.of(t));
+
+        List<Ticket> result = ticketService.listByReporter("bob");
+
+        assertThat(result).containsExactly(t);
+    }
+
+    @Test
     void getById_kastar_TicketNotFoundException_om_arendet_saknas() {
         when(ticketRepository.findById(9999L)).thenReturn(Optional.empty());
 

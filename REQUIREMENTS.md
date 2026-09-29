@@ -36,19 +36,19 @@ IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, kategorier
 
 ## 4. Funktionella krav
 ### 4.1 Autentisering och behörighet
-* KR-101 Systemet ska autentisera användare mot OpenLDAP. Lokala användarkonton ska inte stödjas.
-* KR-102 Roller (User, Agent, Admin) ska härledas från LDAP-gruppmedlemskap och synkroniseras vid inloggning.
-* KR-103 Sessioner ska hanteras server-side via Spring Session. JWT ska inte användas.
-* KR-104 Inaktiva sessioner ska automatiskt ogiltigförklaras efter 60 minuters inaktivitet.
-* KR-105 Systemet ska logga samtliga inloggnings- och utloggningshändelser med tidsstämpel och användar-ID.
+* KR-101 Systemet ska autentisera användare mot OpenLDAP. Lokala användarkonton ska inte stödjas.✅
+* KR-102 Roller (User, Agent, Admin) ska härledas från LDAP-gruppmedlemskap och synkroniseras vid inloggning.✅
+* KR-103 Sessioner ska hanteras server-side via Spring Session. JWT ska inte användas.✅
+* KR-104 Inaktiva sessioner ska automatiskt ogiltigförklaras efter 60 minuters inaktivitet.❌
+* KR-105 Systemet ska logga samtliga inloggnings- och utloggningshändelser med tidsstämpel och användar-ID.❌
 ### 4.2 Ärendehantering
-* KR-201 Slutanvändare ska kunna skapa ärenden med titel, beskrivning, prioritet och kategori.
-* KR-202 Systemet ska automatiskt tilldela ett unikt ärende-ID vid skapande.
-* KR-203 Följande ärendestatusar ska stödjas: New, Assigned, Ongoing, Waiting, Solved, Closed.
-* KR-204 Handläggare ska kunna tilldela ärenden till sig själva eller annan handläggare.
-* KR-205 Handläggare ska kunna ändra på prioritet.
-* KR-206 Alla statusändringar ska loggas med tidsstämpel och ansvarig användare.
-* KR-207 Slutanvändare ska kunna följa status på egna ärenden i realtid.
+* KR-201 Slutanvändare ska kunna skapa ärenden med titel, beskrivning, prioritet och kategori.✅
+* KR-202 Systemet ska automatiskt tilldela ett unikt ärende-ID vid skapande.✅
+* KR-203 Följande ärendestatusar ska stödjas: New, Assigned, Ongoing, Waiting, Solved, Closed.✅
+* KR-204 Handläggare ska kunna tilldela ärenden till sig själva eller annan handläggare.❌
+* KR-205 Handläggare ska kunna ändra på prioritet.✅
+* KR-206 Alla statusändringar ska loggas med tidsstämpel och ansvarig användare.❌
+* KR-207 Slutanvändare ska kunna följa status på egna ärenden i realtid.❌
 * KR-208 Handläggare och slutanvändare ska kunna lägga till kommentarer på ett ärende. Interna kommentarer ska endast vara synliga för handläggare och administratörer.
 * KR-209 Systemet ska stödja filbilagor upp till 10 MB per ärende.
 ### 4.3 Köhantering och tilldelning
