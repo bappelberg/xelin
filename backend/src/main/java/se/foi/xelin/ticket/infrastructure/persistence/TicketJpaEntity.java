@@ -44,6 +44,9 @@ public class TicketJpaEntity {
     @Column(nullable = false, length = 100)
     private String reporter;
 
+    @Column(length = 100)
+    private String assignee;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -52,7 +55,7 @@ public class TicketJpaEntity {
     }
 
     public TicketJpaEntity(Long id, String title, String description, TicketPriority priority,
-                           TicketCategory category, TicketStatus status, String reporter,
+                           TicketCategory category, TicketStatus status, String reporter, String assignee,
                            Instant createdAt) {
         this.id = id;
         this.title = title;
@@ -61,6 +64,7 @@ public class TicketJpaEntity {
         this.category = category;
         this.status = status;
         this.reporter = reporter;
+        this.assignee = assignee;
         this.createdAt = createdAt;
     }
 
@@ -90,6 +94,10 @@ public class TicketJpaEntity {
 
     public String getReporter() {
         return reporter;
+    }
+
+    public String getAssignee() {
+        return assignee;
     }
 
     public Instant getCreatedAt() {

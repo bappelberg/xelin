@@ -13,24 +13,27 @@ public class Ticket {
     private final TicketCategory category;
     private final TicketStatus status;
     private final String reporter;       // uid för slutanvändaren som skapade ärendet
+    private final String assignee;       // uid för handläggaren ärendet är tilldelat, eller null (KR-204)
     private final Instant createdAt;
 
-    // Skapar ett nytt ärende: status NEW (KR-203) och skapandetidpunkt sätts direkt.
+    // Skapar ett nytt ärende: status NEW (KR-203), ingen handläggare tilldelad än, skapandetidpunkt sätts direkt.
     public static Ticket create(String title, String description, TicketPriority priority,
                                 TicketCategory category, String reporter) {
         return new Ticket(null, title, description, priority, category,
-                TicketStatus.NEW, reporter, Instant.now());
+                TicketStatus.NEW, reporter, null, Instant.now());
     }
 
     // Återskapar ett ärende från lagringen.
     public Ticket(Long id, String title, String description, TicketPriority priority,
-                  TicketCategory category, TicketStatus status, String reporter, Instant createdAt) {
+                  TicketCategory category, TicketStatus status, String reporter, String assignee,
+                  Instant createdAt) {
         this.title = requireText(title, "title");
         this.description = requireText(description, "description");
         this.priority = Objects.requireNonNull(priority, "priority");
         this.category = Objects.requireNonNull(category, "category");
         this.status = Objects.requireNonNull(status, "status");
         this.reporter = requireText(reporter, "reporter");
+        this.assignee = assignee;
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.id = id;
     }
@@ -70,13 +73,25 @@ public class Ticket {
         return reporter;
     }
 
+    public String getAssignee() {
+        return assignee;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
-    // Handläggare ändrar status, prioritet och kategori (KR-203/KR-301). Övriga fält är
-    // oföränderliga efter registrering — ny instans, samma id/skapandetidpunkt.
+    // Handläggare ändrar status, prioritet och kategori (KR-203/KR-301). Tilldelad handläggare
+    // påverkas inte här. Övriga fält är oföränderliga efter registrering — ny instans, samma id/skapandetidpunkt.
     public Ticket update(TicketStatus newStatus, TicketPriority newPriority, TicketCategory newCategory) {
-        return new Ticket(id, title, description, newPriority, newCategory, newStatus, reporter, createdAt);
+        return new Ticket(id, title, description, newPriority, newCategory, newStatus, reporter, assignee, createdAt);
+    }
+
+    // Handläggare tilldelar ärendet till sig själv eller en annan handläggare (KR-204).
+    // Ett nytt ärende (NEW) går automatiskt vidare till ASSIGNED; övriga statusar lämnas orörda.
+    public Ticket assignTo(String newAssignee) {
+        TicketStatus newStatus = status == TicketStatus.NEW ? TicketStatus.ASSIGNED : status;
+        return new Ticket(id, title, description, priority, category, newStatus, reporter,
+                requireText(newAssignee, "assignee"), createdAt);
     }
 }

@@ -43,7 +43,7 @@ class TicketCommentServiceTest {
     private Ticket ticketReportedByBen() {
         return new Ticket(1L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.now());
+                "ben", null, Instant.now());
     }
 
     @Test

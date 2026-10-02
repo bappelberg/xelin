@@ -9,6 +9,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import se.foi.xelin.shared.security.MethodSecurityConfig;
+import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
@@ -55,6 +56,9 @@ class TicketControllerTest {
     @MockitoBean
     private UpdateTicketUseCase updateTicket;
 
+    @MockitoBean
+    private AssignTicketUseCase assignTicket;
+
     private static final String BODY = """
             {"title":"Skrivaren fungerar inte","description":"Felkod E-52","priority":"NORMAL","category":"HARDWARE"}
             """;
@@ -64,7 +68,7 @@ class TicketControllerTest {
     void slutanvandare_skapar_arende_ger_201_med_id() throws Exception {
         Ticket saved = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(createTicket.create(any())).thenReturn(saved);
 
         mockMvc.perform(post("/api/tickets").with(csrf())
@@ -107,7 +111,7 @@ class TicketControllerTest {
     void handlaggare_listar_arendekon() throws Exception {
         Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(listTickets.listAll()).thenReturn(List.of(t));
 
         mockMvc.perform(get("/api/tickets"))
@@ -129,7 +133,7 @@ class TicketControllerTest {
     void handlaggare_hamtar_ett_arende() throws Exception {
         Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(getTicket.getById(1001L)).thenReturn(t);
 
         mockMvc.perform(get("/api/tickets/1001"))
@@ -143,7 +147,7 @@ class TicketControllerTest {
     void slutanvandare_hamtar_eget_arende() throws Exception {
         Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(getTicket.getById(1001L)).thenReturn(t);
 
         mockMvc.perform(get("/api/tickets/1001"))
@@ -156,7 +160,7 @@ class TicketControllerTest {
     void slutanvandare_nekas_hamta_annans_arende() throws Exception {
         Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(getTicket.getById(1001L)).thenReturn(t);
 
         mockMvc.perform(get("/api/tickets/1001"))
@@ -168,7 +172,7 @@ class TicketControllerTest {
     void slutanvandare_listar_egna_arenden() throws Exception {
         Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(listMyTickets.listByReporter("ben")).thenReturn(List.of(t));
 
         mockMvc.perform(get("/api/tickets/mine"))
@@ -190,7 +194,7 @@ class TicketControllerTest {
     void handlaggare_uppdaterar_status_och_prioritet() throws Exception {
         Ticket updated = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.HIGH, TicketCategory.HARDWARE, TicketStatus.ASSIGNED,
-                "ben", Instant.parse("2026-01-01T10:00:00Z"));
+                "ben", null, Instant.parse("2026-01-01T10:00:00Z"));
         when(updateTicket.update(any())).thenReturn(updated);
 
         mockMvc.perform(patch("/api/tickets/1001").with(csrf())
@@ -207,6 +211,46 @@ class TicketControllerTest {
         mockMvc.perform(patch("/api/tickets/1001").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ASSIGNED\",\"priority\":\"HIGH\",\"category\":\"HARDWARE\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "agnes", roles = "Agent")
+    void handlaggare_tilldelar_sig_sjalv_arendet_utan_body() throws Exception {
+        Ticket assigned = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.ASSIGNED,
+                "ben", "agnes", Instant.parse("2026-01-01T10:00:00Z"));
+        when(assignTicket.assign(any())).thenReturn(assigned);
+
+        mockMvc.perform(patch("/api/tickets/1001/assign").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee").value("agnes"))
+                .andExpect(jsonPath("$.status").value("ASSIGNED"));
+    }
+
+    @Test
+    @WithMockUser(username = "agnes", roles = "Agent")
+    void handlaggare_tilldelar_arendet_till_en_kollega() throws Exception {
+        Ticket assigned = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.ASSIGNED,
+                "ben", "bob-agent", Instant.parse("2026-01-01T10:00:00Z"));
+        when(assignTicket.assign(any())).thenReturn(assigned);
+
+        mockMvc.perform(patch("/api/tickets/1001/assign").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assignee\":\"bob-agent\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee").value("bob-agent"));
+    }
+
+    @Test
+    @WithMockUser(username = "bob", roles = "User")
+    void slutanvandare_far_inte_tilldela_arende() throws Exception {
+        mockMvc.perform(patch("/api/tickets/1001/assign").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isForbidden());
     }
 }

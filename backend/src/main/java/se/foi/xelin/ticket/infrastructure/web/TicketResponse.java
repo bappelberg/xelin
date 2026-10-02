@@ -14,10 +14,11 @@ public class TicketResponse {
     private final String priority;
     private final String category;
     private final String reporter;
+    private final String assignee;
     private final Instant createdAt;
 
     private TicketResponse(Long id, String title, String description, String status, String priority,
-                           String category, String reporter, Instant createdAt) {
+                           String category, String reporter, String assignee, Instant createdAt) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -25,6 +26,7 @@ public class TicketResponse {
         this.priority = priority;
         this.category = category;
         this.reporter = reporter;
+        this.assignee = assignee;
         this.createdAt = createdAt;
     }
 
@@ -37,6 +39,7 @@ public class TicketResponse {
                 ticket.getPriority().name(),
                 ticket.getCategory().name(),
                 ticket.getReporter(),
+                ticket.getAssignee(),
                 ticket.getCreatedAt());
     }
 
@@ -66,6 +69,10 @@ public class TicketResponse {
 
     public String getReporter() {
         return reporter;
+    }
+
+    public String getAssignee() {
+        return assignee;
     }
 
     public Instant getCreatedAt() {

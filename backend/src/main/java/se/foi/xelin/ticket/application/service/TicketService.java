@@ -3,6 +3,8 @@ package se.foi.xelin.ticket.application.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import se.foi.xelin.ticket.application.port.in.AssignTicketCommand;
+import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
@@ -18,7 +20,7 @@ import java.util.List;
 
 @Service
 public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, ListMyTicketsUseCase,
-        GetTicketUseCase, UpdateTicketUseCase {
+        GetTicketUseCase, UpdateTicketUseCase, AssignTicketUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(TicketService.class);
 
@@ -72,6 +74,19 @@ public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, L
         // TODO (audit): emittera TICKET_UPDATED via audit-kontexten när den finns — se skill audit-event.
         log.info("Ärende uppdaterat: id={} status={} priority={} kategori={}",
                 saved.getId(), saved.getStatus(), saved.getPriority(), saved.getCategory());
+
+        return saved;
+    }
+
+    @Override
+    public Ticket assign(AssignTicketCommand command) {
+        Ticket ticket = getById(command.ticketId());
+        Ticket assigned = ticket.assignTo(command.assignee());
+        Ticket saved = ticketRepository.save(assigned);
+
+        // TODO (audit): emittera TICKET_ASSIGNED via audit-kontexten när den finns — se skill audit-event.
+        log.info("Ärende tilldelat: id={} assignee={} status={}",
+                saved.getId(), saved.getAssignee(), saved.getStatus());
 
         return saved;
     }

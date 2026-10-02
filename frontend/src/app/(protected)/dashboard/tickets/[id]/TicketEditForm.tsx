@@ -48,6 +48,11 @@ export default function TicketEditForm({ ticket }: { ticket: TicketDetail }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [assignee, setAssignee] = useState(ticket.assignee);
+  const [assigneeInput, setAssigneeInput] = useState("");
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentBody, setCommentBody] = useState("");
@@ -114,6 +119,38 @@ export default function TicketEditForm({ ticket }: { ticket: TicketDetail }) {
     }
   }
 
+  async function handleAssign(targetAssignee: string | null) {
+    setAssigning(true);
+    setAssignError(null);
+
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(targetAssignee ? { assignee: targetAssignee } : {}),
+      });
+
+      if (res.status === 401) {
+        router.push(`/login?next=/dashboard/tickets/${ticket.id}`);
+        return;
+      }
+
+      if (!res.ok) {
+        setAssignError("The ticket could not be assigned. Please try again.");
+        return;
+      }
+
+      const updated = (await res.json()) as TicketDetail;
+      setAssignee(updated.assignee);
+      setStatus(updated.status);
+      setAssigneeInput("");
+    } catch {
+      setAssignError("Could not reach the service. Check your connection.");
+    } finally {
+      setAssigning(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
@@ -160,6 +197,47 @@ export default function TicketEditForm({ ticket }: { ticket: TicketDetail }) {
       <p className="text-sm text-zinc-700 whitespace-pre-wrap bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3 mb-6">
         {ticket.description}
       </p>
+
+      <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 mb-6">
+        <p className="text-sm text-zinc-700">
+          Assigned to{" "}
+          <span className="font-medium text-zinc-900">{assignee ?? "nobody yet"}</span>
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleAssign(null)}
+            disabled={assigning}
+            className="rounded-lg border border-zinc-300 bg-white hover:bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            Assign to me
+          </button>
+
+          <input
+            type="text"
+            value={assigneeInput}
+            onChange={(e) => setAssigneeInput(e.target.value)}
+            placeholder="uid of another agent"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-[#1e3d8c] focus:ring-2 focus:ring-[#1e3d8c]/20 transition-colors"
+          />
+
+          <button
+            type="button"
+            onClick={() => handleAssign(assigneeInput.trim())}
+            disabled={assigning || assigneeInput.trim() === ""}
+            className="rounded-lg bg-[#1e3d8c] hover:bg-[#162e6a] active:bg-[#0f2050] px-4 py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            {assigning ? "Assigning…" : "Assign"}
+          </button>
+        </div>
+
+        {assignError && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {assignError}
+          </p>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="grid gap-5 sm:grid-cols-3">

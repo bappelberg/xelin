@@ -47,6 +47,7 @@ public class TicketPersistenceAdapter implements TicketRepository {
                 ticket.getCategory(),
                 ticket.getStatus(),
                 ticket.getReporter(),
+                ticket.getAssignee(),
                 ticket.getCreatedAt());
     }
 
@@ -59,6 +60,7 @@ public class TicketPersistenceAdapter implements TicketRepository {
                 entity.getCategory(),
                 entity.getStatus(),
                 entity.getReporter(),
+                entity.getAssignee(),
                 entity.getCreatedAt());
     }
 }

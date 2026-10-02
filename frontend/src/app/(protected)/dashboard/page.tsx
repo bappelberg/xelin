@@ -9,6 +9,7 @@ type TicketListItem = {
   priority: string;
   category: string;
   reporter: string;
+  assignee: string | null;
   createdAt: string;
 };
 
@@ -81,6 +82,7 @@ export default async function Dashboard() {
                   <th className="px-4 py-3 font-medium">Priority</th>
                   <th className="px-4 py-3 font-medium">Category</th>
                   <th className="px-4 py-3 font-medium">Reporter</th>
+                  <th className="px-4 py-3 font-medium">Assignee</th>
                   <th className="px-4 py-3 font-medium">Created</th>
                 </tr>
               </thead>
@@ -100,6 +102,7 @@ export default async function Dashboard() {
                     <td className="px-4 py-3">{t.priority}</td>
                     <td className="px-4 py-3">{t.category}</td>
                     <td className="px-4 py-3">{t.reporter}</td>
+                    <td className="px-4 py-3 text-zinc-500">{t.assignee ?? "Unassigned"}</td>
                     <td className="px-4 py-3 text-zinc-500">
                       {new Date(t.createdAt).toLocaleString("en-GB")}
                     </td>

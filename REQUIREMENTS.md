@@ -45,7 +45,7 @@ IT-ansvarig. Full systembehörighet inklusive användarkonfiguration, kategorier
 * KR-201 Slutanvändare ska kunna skapa ärenden med titel, beskrivning, prioritet och kategori.✅
 * KR-202 Systemet ska automatiskt tilldela ett unikt ärende-ID vid skapande.✅
 * KR-203 Följande ärendestatusar ska stödjas: New, Assigned, Ongoing, Waiting, Solved, Closed.✅
-* KR-204 Handläggare ska kunna tilldela ärenden till sig själva eller annan handläggare.❌
+* KR-204 Handläggare ska kunna tilldela ärenden till sig själva eller annan handläggare.✅
 * KR-205 Handläggare ska kunna ändra på prioritet.✅
 * KR-206 Alla statusändringar ska loggas med tidsstämpel och ansvarig användare.❌
 * KR-207 Slutanvändare ska kunna följa status på egna ärenden i realtid.❌

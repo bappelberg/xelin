@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import se.foi.xelin.ticket.application.port.in.AssignTicketCommand;
 import se.foi.xelin.ticket.application.port.in.CreateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketCommand;
 import se.foi.xelin.ticket.application.port.out.TicketRepository;
@@ -39,7 +40,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> {
             Ticket t = invocation.getArgument(0);
             return new Ticket(42L, t.getTitle(), t.getDescription(), t.getPriority(),
-                    t.getCategory(), t.getStatus(), t.getReporter(), t.getCreatedAt());
+                    t.getCategory(), t.getStatus(), t.getReporter(), t.getAssignee(), t.getCreatedAt());
         });
 
         CreateTicketCommand command = new CreateTicketCommand(
@@ -74,7 +75,7 @@ class TicketServiceTest {
     void listAll_delegerar_till_repositoryt() {
         Ticket t = new Ticket(1L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.now());
+                "ben", null, Instant.now());
         when(ticketRepository.findAll()).thenReturn(List.of(t));
 
         List<Ticket> result = ticketService.listAll();
@@ -86,7 +87,7 @@ class TicketServiceTest {
     void listByReporter_delegerar_till_repositoryt() {
         Ticket t = new Ticket(1L, "Kan inte logga in", "Kontot verkar låst",
                 TicketPriority.HIGH, TicketCategory.ACCOUNT, TicketStatus.NEW,
-                "bob", Instant.now());
+                "bob", null, Instant.now());
         when(ticketRepository.findByReporter("bob")).thenReturn(List.of(t));
 
         List<Ticket> result = ticketService.listByReporter("bob");
@@ -106,7 +107,7 @@ class TicketServiceTest {
     void update_andrar_status_och_prioritet_och_sparar() {
         Ticket existing = new Ticket(1L, "Skrivaren fungerar inte", "Felkod E-52",
                 TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
-                "ben", Instant.now());
+                "ben", null, Instant.now());
         when(ticketRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -117,5 +118,41 @@ class TicketServiceTest {
         assertThat(result.getPriority()).isEqualTo(TicketPriority.HIGH);
         assertThat(result.getCategory()).isEqualTo(TicketCategory.NETWORK);
         assertThat(result.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void assign_satter_handlaggare_och_byter_NEW_till_ASSIGNED() {
+        Ticket existing = new Ticket(1L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.NEW,
+                "ben", null, Instant.now());
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
+
+        Ticket result = ticketService.assign(new AssignTicketCommand(1L, "agnes"));
+
+        assertThat(result.getAssignee()).isEqualTo("agnes");
+        assertThat(result.getStatus()).isEqualTo(TicketStatus.ASSIGNED);
+    }
+
+    @Test
+    void assign_andrar_inte_status_om_arendet_redan_ar_i_gang() {
+        Ticket existing = new Ticket(1L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.ONGOING,
+                "ben", "agnes", Instant.now());
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArgument(0));
+
+        Ticket result = ticketService.assign(new AssignTicketCommand(1L, "bob"));
+
+        assertThat(result.getAssignee()).isEqualTo("bob");
+        assertThat(result.getStatus()).isEqualTo(TicketStatus.ONGOING);
+    }
+
+    @Test
+    void assign_kastar_TicketNotFoundException_om_arendet_saknas() {
+        when(ticketRepository.findById(9999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ticketService.assign(new AssignTicketCommand(9999L, "agnes")))
+                .isInstanceOf(TicketNotFoundException.class);
     }
 }

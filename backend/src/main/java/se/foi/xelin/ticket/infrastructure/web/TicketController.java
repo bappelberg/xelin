@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
@@ -35,15 +36,17 @@ public class TicketController {
     private final ListMyTicketsUseCase listMyTickets;
     private final GetTicketUseCase getTicket;
     private final UpdateTicketUseCase updateTicket;
+    private final AssignTicketUseCase assignTicket;
 
     public TicketController(CreateTicketUseCase createTicket, ListTicketsUseCase listTickets,
                             ListMyTicketsUseCase listMyTickets, GetTicketUseCase getTicket,
-                            UpdateTicketUseCase updateTicket) {
+                            UpdateTicketUseCase updateTicket, AssignTicketUseCase assignTicket) {
         this.createTicket = createTicket;
         this.listTickets = listTickets;
         this.listMyTickets = listMyTickets;
         this.getTicket = getTicket;
         this.updateTicket = updateTicket;
+        this.assignTicket = assignTicket;
     }
 
     // KR-201: slutanvändare registrerar ett ärende.
@@ -97,6 +100,16 @@ public class TicketController {
     @PreAuthorize("hasAnyRole('Agent', 'Admin')")
     public TicketResponse update(@PathVariable Long id, @Valid @RequestBody UpdateTicketRequest request) {
         return TicketResponse.from(updateTicket.update(request.toCommand(id)));
+    }
+
+    // Handläggare tilldelar ärendet till sig själv eller en annan handläggare (KR-204/KR-301).
+    // assignee utelämnad i body => den inloggade handläggaren tilldelar sig ärendet själv.
+    @PatchMapping("/{id}/assign")
+    @PreAuthorize("hasAnyRole('Agent', 'Admin')")
+    public TicketResponse assign(@PathVariable Long id, @RequestBody(required = false) AssignTicketRequest request,
+                                 Authentication authentication) {
+        AssignTicketRequest body = request != null ? request : new AssignTicketRequest();
+        return TicketResponse.from(assignTicket.assign(body.toCommand(id, authentication.getName())));
     }
 
     // Lokal hanterare (inte den delade ApiExceptionHandler) — TicketNotFoundException

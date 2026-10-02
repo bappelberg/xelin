@@ -11,6 +11,7 @@ export type TicketDetail = {
   priority: string;
   category: string;
   reporter: string;
+  assignee: string | null;
   createdAt: string;
 };
 
