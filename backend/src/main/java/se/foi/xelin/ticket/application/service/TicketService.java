@@ -8,6 +8,7 @@ import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketCommand;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListAssignedTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketCommand;
@@ -20,7 +21,7 @@ import java.util.List;
 
 @Service
 public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, ListMyTicketsUseCase,
-        GetTicketUseCase, UpdateTicketUseCase, AssignTicketUseCase {
+        ListAssignedTicketsUseCase, GetTicketUseCase, UpdateTicketUseCase, AssignTicketUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(TicketService.class);
 
@@ -57,6 +58,11 @@ public class TicketService implements CreateTicketUseCase, ListTicketsUseCase, L
     @Override
     public List<Ticket> listByReporter(String reporter) {
         return ticketRepository.findByReporter(reporter);
+    }
+
+    @Override
+    public List<Ticket> listByAssignee(String assignee) {
+        return ticketRepository.findByAssignee(assignee);
     }
 
     @Override

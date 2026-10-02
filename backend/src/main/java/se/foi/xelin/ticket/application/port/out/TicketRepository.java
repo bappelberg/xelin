@@ -14,4 +14,6 @@ public interface TicketRepository {
     Optional<Ticket> findById(Long id);
 
     List<Ticket> findByReporter(String reporter);
+
+    List<Ticket> findByAssignee(String assignee);
 }

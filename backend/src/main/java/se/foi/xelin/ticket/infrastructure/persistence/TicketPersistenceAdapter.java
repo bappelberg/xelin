@@ -38,6 +38,11 @@ public class TicketPersistenceAdapter implements TicketRepository {
         return jpaRepository.findByReporter(reporter).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<Ticket> findByAssignee(String assignee) {
+        return jpaRepository.findByAssignee(assignee).stream().map(this::toDomain).toList();
+    }
+
     private TicketJpaEntity toEntity(Ticket ticket) {
         return new TicketJpaEntity(
                 ticket.getId(),

@@ -12,6 +12,7 @@ import se.foi.xelin.shared.security.MethodSecurityConfig;
 import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListAssignedTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
@@ -49,6 +50,9 @@ class TicketControllerTest {
 
     @MockitoBean
     private ListMyTicketsUseCase listMyTickets;
+
+    @MockitoBean
+    private ListAssignedTicketsUseCase listAssignedTickets;
 
     @MockitoBean
     private GetTicketUseCase getTicket;
@@ -178,6 +182,27 @@ class TicketControllerTest {
         mockMvc.perform(get("/api/tickets/mine"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].reporter").value("ben"));
+    }
+
+    @Test
+    @WithMockUser(username = "agnes", roles = "Agent")
+    void handlaggare_listar_egna_tilldelade_arenden() throws Exception {
+        Ticket t = new Ticket(1001L, "Skrivaren fungerar inte", "Felkod E-52",
+                TicketPriority.NORMAL, TicketCategory.HARDWARE, TicketStatus.ASSIGNED,
+                "ben", "agnes", Instant.parse("2026-01-01T10:00:00Z"));
+        when(listAssignedTickets.listByAssignee("agnes")).thenReturn(List.of(t));
+
+        mockMvc.perform(get("/api/tickets/assigned-to-me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1001))
+                .andExpect(jsonPath("$[0].assignee").value("agnes"));
+    }
+
+    @Test
+    @WithMockUser(username = "bob", roles = "User")
+    void slutanvandare_far_inte_lista_tilldelade_arenden() throws Exception {
+        mockMvc.perform(get("/api/tickets/assigned-to-me"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

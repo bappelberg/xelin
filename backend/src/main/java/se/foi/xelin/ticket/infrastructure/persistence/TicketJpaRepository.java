@@ -7,4 +7,6 @@ import java.util.List;
 // Spring Data-repository för JPA-entiteten. Används bara av persistence-adaptern.
 public interface TicketJpaRepository extends JpaRepository<TicketJpaEntity, Long> {
     List<TicketJpaEntity> findByReporter(String reporter);
+
+    List<TicketJpaEntity> findByAssignee(String assignee);
 }

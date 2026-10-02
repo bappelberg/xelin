@@ -75,7 +75,18 @@ function linksFor(pathname: string): NavLink[] {
 
   if (pathname.startsWith("/dashboard")) {
     return [
-      { href: "/dashboard", label: "Ticket queue", icon: QueueIcon, isActive: (p) => p.startsWith("/dashboard") },
+      {
+        href: "/dashboard",
+        label: "Ticket queue",
+        icon: QueueIcon,
+        isActive: (p) => p === "/dashboard" || p.startsWith("/dashboard/tickets"),
+      },
+      {
+        href: "/dashboard/my-tickets",
+        label: "My tickets",
+        icon: TicketsIcon,
+        isActive: (p) => p.startsWith("/dashboard/my-tickets"),
+      },
     ];
   }
 

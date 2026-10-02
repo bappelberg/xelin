@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import se.foi.xelin.ticket.application.port.in.AssignTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.CreateTicketUseCase;
 import se.foi.xelin.ticket.application.port.in.GetTicketUseCase;
+import se.foi.xelin.ticket.application.port.in.ListAssignedTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListMyTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.ListTicketsUseCase;
 import se.foi.xelin.ticket.application.port.in.UpdateTicketUseCase;
@@ -34,16 +35,19 @@ public class TicketController {
     private final CreateTicketUseCase createTicket;
     private final ListTicketsUseCase listTickets;
     private final ListMyTicketsUseCase listMyTickets;
+    private final ListAssignedTicketsUseCase listAssignedTickets;
     private final GetTicketUseCase getTicket;
     private final UpdateTicketUseCase updateTicket;
     private final AssignTicketUseCase assignTicket;
 
     public TicketController(CreateTicketUseCase createTicket, ListTicketsUseCase listTickets,
-                            ListMyTicketsUseCase listMyTickets, GetTicketUseCase getTicket,
-                            UpdateTicketUseCase updateTicket, AssignTicketUseCase assignTicket) {
+                            ListMyTicketsUseCase listMyTickets, ListAssignedTicketsUseCase listAssignedTickets,
+                            GetTicketUseCase getTicket, UpdateTicketUseCase updateTicket,
+                            AssignTicketUseCase assignTicket) {
         this.createTicket = createTicket;
         this.listTickets = listTickets;
         this.listMyTickets = listMyTickets;
+        this.listAssignedTickets = listAssignedTickets;
         this.getTicket = getTicket;
         this.updateTicket = updateTicket;
         this.assignTicket = assignTicket;
@@ -75,6 +79,13 @@ public class TicketController {
     @PreAuthorize("hasRole('User')")
     public List<TicketResponse> mine(Authentication authentication) {
         return listMyTickets.listByReporter(authentication.getName()).stream().map(TicketResponse::from).toList();
+    }
+
+    // Handläggarens egen ärendekö: bara ärenden tilldelade till den inloggade handläggaren (KR-204/KR-301).
+    @GetMapping("/assigned-to-me")
+    @PreAuthorize("hasAnyRole('Agent', 'Admin')")
+    public List<TicketResponse> assignedToMe(Authentication authentication) {
+        return listAssignedTickets.listByAssignee(authentication.getName()).stream().map(TicketResponse::from).toList();
     }
 
     // Handläggare öppnar ett enskilt ärende för att se full information (KR-301).
