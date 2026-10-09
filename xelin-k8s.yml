@@ -1,0 +1,246 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: xelin
+---
+# Lösenord. Skapa hellre med kubectl (se kommandon nedan) än att checka in i git.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: xelin-secrets
+  namespace: xelin
+type: Opaque
+stringData:
+  DB_PASSWORD: change-me
+  LDAP_ADMIN_PASSWORD: admin
+  LDAP_CONFIG_PASSWORD: config
+---
+# ===================== POSTGRES =====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: db               # samma namn som i compose -> DB_HOST=db fungerar
+  namespace: xelin
+spec:
+  clusterIP: None
+  selector: { app: db }
+  ports:
+    - port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: xelin
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels: { app: db }
+  template:
+    metadata:
+      labels: { app: db }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - { name: POSTGRES_DB, value: xelin }
+            - { name: POSTGRES_USER, value: xelin }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: xelin-secrets, key: DB_PASSWORD } }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "xelin", "-d", "xelin"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+      volumes:
+        - name: initdb
+          configMap:
+            name: db-init-scripts
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+# ===================== OPENLDAP =====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap
+  namespace: xelin
+spec:
+  selector: { app: openldap }
+  ports:
+    - { name: ldap, port: 389 }
+    - { name: ldaps, port: 636 }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openldap
+  namespace: xelin
+spec:
+  serviceName: openldap
+  replicas: 1
+  selector:
+    matchLabels: { app: openldap }
+  template:
+    metadata:
+      labels: { app: openldap }
+    spec:
+      containers:
+        - name: openldap
+          image: osixia/openldap:1.5.0
+          args: ["--copy-service"]
+          ports:
+            - containerPort: 389
+            - containerPort: 636
+          env:
+            - { name: LDAP_ORGANISATION, value: FOI }
+            - { name: LDAP_DOMAIN, value: foi.se }
+            - name: LDAP_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: xelin-secrets, key: LDAP_ADMIN_PASSWORD } }
+            - name: LDAP_CONFIG_PASSWORD
+              valueFrom: { secretKeyRef: { name: xelin-secrets, key: LDAP_CONFIG_PASSWORD } }
+            - { name: HOSTNAME, value: ldap.foi.se }
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - ldapsearch -x -H ldap://localhost -b dc=foi,dc=se -D cn=admin,dc=foi,dc=se -w "$LDAP_ADMIN_PASSWORD"
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          volumeMounts:
+            - name: ldap-data
+              mountPath: /var/lib/ldap
+            - name: ldap-config
+              mountPath: /etc/ldap/slapd.d
+            - name: bootstrap
+              mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+      volumes:
+        - name: bootstrap
+          configMap:
+            name: ldap-bootstrap
+  volumeClaimTemplates:
+    - metadata:
+        name: ldap-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 1Gi } }
+    - metadata:
+        name: ldap-config
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources: { requests: { storage: 256Mi } }
+---
+# ===================== BACKEND =====================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: xelin
+data:
+  DB_HOST: db
+  DB_PORT: "5432"
+  DB_NAME: xelin
+  DB_USER: xelin
+  LDAP_URL: ldap://openldap:389
+  LDAP_BASE_DN: dc=foi,dc=se
+  LDAP_BIND_DN: cn=admin,dc=foi,dc=se
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: xelin
+spec:
+  selector: { app: backend }
+  ports:
+    - port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: xelin
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      # Ersätter depends_on: väntar tills db och ldap svarar
+      initContainers:
+        - name: wait-for-db
+          image: postgres:17-alpine
+          command: ["sh", "-c", "until pg_isready -h db -p 5432 -U xelin; do sleep 2; done"]
+        - name: wait-for-ldap
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z openldap 389; do sleep 2; done"]
+      containers:
+        - name: backend
+          image: registry.example.local/xelin-backend:latest   # byt till din registry
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: backend-config }
+          env:
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: xelin-secrets, key: DB_PASSWORD } }
+            - name: LDAP_BIND_PASSWORD
+              valueFrom: { secretKeyRef: { name: xelin-secrets, key: LDAP_ADMIN_PASSWORD } }
+---
+# ===================== FRONTEND =====================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: xelin
+spec:
+  type: NodePort
+  selector: { app: frontend }
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000      # nås på http://<nod-ip>:30000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: xelin
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: frontend }
+  template:
+    metadata:
+      labels: { app: frontend }
+    spec:
+      containers:
+        - name: frontend
+          image: registry.example.local/xelin-frontend:latest  # byt till din registry
+          ports:
+            - containerPort: 3000
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: BACKEND_URL, value: "http://backend:8080" }
